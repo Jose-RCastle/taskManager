@@ -1,0 +1,40 @@
+using TaskManagerOS.Core.Models;
+using TaskManagerOS.WinForms.Services;
+using TaskManagerOS.WinForms.Theme;
+
+namespace TaskManagerOS.WinForms.Views;
+
+public sealed class ExecutionListView : UserControl
+{
+    private readonly AppState _state; private readonly ComboBox _programs = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
+    private readonly DataGridView _grid = new() { Dock = DockStyle.Fill }; private readonly NumericUpDown _arrival = Num(0, 999), _burst = Num(1, 999), _priority = Num(0, 99);
+    public ExecutionListView(AppState state) { _state = state; BuildUI(); WireEvents(); ApplyTheme(); RefreshAll(); }
+    private void BuildUI()
+    {
+        var top = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 52, Padding = new(4) }; top.Controls.AddRange([_programs, AppTheme.Button("Agregar"), AppTheme.Button("Repetir"), AppTheme.Button("Eliminar", AppTheme.Error), AppTheme.Button("Subir", AppTheme.Surface2), AppTheme.Button("Bajar", AppTheme.Surface2), AppTheme.Button("Vaciar", AppTheme.Error)]);
+        var edit = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 58, Padding = new(4) };
+        edit.Controls.AddRange([Label("Llegada"), _arrival, Label("Ráfaga"), _burst, Label("Prioridad"), _priority, AppTheme.Button("Aplicar cambios")]);
+        Controls.Add(_grid); Controls.Add(edit); Controls.Add(top);
+    }
+    private void WireEvents()
+    {
+        Button("Agregar").Click += (_, _) => Add(false); Button("Repetir").Click += (_, _) => Add(true); Button("Eliminar").Click += (_, _) => Remove(); Button("Vaciar").Click += (_, _) => { _state.Project.ExecutionList.Clear(); Commit(); };
+        Button("Subir").Click += (_, _) => Move(-1); Button("Bajar").Click += (_, _) => Move(1); Button("Aplicar cambios").Click += (_, _) => Apply(); _grid.SelectionChanged += (_, _) => LoadSelection();
+    }
+    private void Add(bool repeat)
+    {
+        ProcessInstance? p = repeat && Selected() is { } selected ? selected.Copy() : _programs.SelectedItem is ProcessDefinition d ? ProcessInstance.From(d) : null;
+        if (p is null) return; p.Id = Guid.NewGuid(); p.Name = $"{p.Name.Split('#')[0].Trim()} #{_state.Project.ExecutionList.Count + 1}"; p.Status = ProcessStatus.New; p.IsFinished = false; _state.Project.ExecutionList.Add(p); Commit();
+    }
+    private void Remove() { var p = Selected(); if (p is null) return; _state.Project.ExecutionList.Remove(p); Commit(); }
+    private void Move(int delta) { var p = Selected(); if (p is null) return; var i = _state.Project.ExecutionList.IndexOf(p); var n = i + delta; if (n < 0 || n >= _state.Project.ExecutionList.Count) return; (_state.Project.ExecutionList[i], _state.Project.ExecutionList[n]) = (_state.Project.ExecutionList[n], _state.Project.ExecutionList[i]); Commit(); _grid.Rows[n].Selected = true; }
+    private void Apply() { var p = Selected(); if (p is null) return; p.ArrivalTime = (int)_arrival.Value; p.CpuBurst = p.RemainingTime = (int)_burst.Value; p.Priority = (int)_priority.Value; Commit(); }
+    private void LoadSelection() { var p = Selected(); if (p is null) return; _arrival.Value = p.ArrivalTime; _burst.Value = p.CpuBurst; _priority.Value = p.Priority; }
+    private ProcessInstance? Selected() => _grid.CurrentRow?.Tag is Guid id ? _state.Project.ExecutionList.FirstOrDefault(p => p.Id == id) : null;
+    private void Commit() { _state.Save(); RefreshGrid(); }
+    private void RefreshAll() { _programs.DataSource = null; _programs.DataSource = _state.Project.Programs; _programs.DisplayMember = nameof(ProcessDefinition.Name); RefreshGrid(); }
+    private void RefreshGrid() { _grid.Rows.Clear(); _grid.Columns.Clear(); foreach (var c in new[] { ("Order", "Orden"), ("Name", "Instancia"), ("Arrival", "Llegada"), ("Burst", "CPU"), ("Priority", "Prioridad"), ("Pages", "Páginas") }) _grid.Columns.Add(c.Item1, c.Item2); foreach (var (p, i) in _state.Project.ExecutionList.Select((p, i) => (p, i))) { var r = _grid.Rows.Add(i + 1, p.Name, p.ArrivalTime, p.CpuBurst, p.Priority, p.PageCount); _grid.Rows[r].Tag = p.Id; } }
+    private Button Button(string text) => Desc(this).OfType<Button>().First(b => b.Text == text); private static IEnumerable<Control> Desc(Control r) => r.Controls.Cast<Control>().SelectMany(c => new[] { c }.Concat(Desc(c)));
+    private static Label Label(string text) => new() { Text = text, AutoSize = true, ForeColor = AppTheme.Muted, Margin = new(10, 12, 2, 2) }; private static NumericUpDown Num(int min, int max) => new() { Minimum = min, Maximum = max, Width = 70, Margin = new(2, 7, 4, 2) };
+    private void ApplyTheme() { BackColor = AppTheme.Background; AppTheme.Grid(_grid); }
+}
