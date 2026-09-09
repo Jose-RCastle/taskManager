@@ -57,6 +57,7 @@ public sealed class SimulationResult
     public List<SimulationStep> Steps { get; set; } = [];
     public SimulationMetrics Metrics { get; set; } = new();
     public bool Completed { get; set; }
+    public int InputProcessCount { get; set; }
 }
 
 public sealed record CpuTick(int Tick, Guid? ProcessId, string ProcessName,

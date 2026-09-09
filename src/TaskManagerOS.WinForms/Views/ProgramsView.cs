@@ -13,17 +13,18 @@ public sealed class ProgramsView : UserControl
     public ProgramsView(AppState state) { _state = state; BuildUI(); WireEvents(); ApplyTheme(); RefreshGrid(); Clear(); }
     private void BuildUI()
     {
-        var split = new SplitContainer { Dock = DockStyle.Fill, SplitterDistance = 680, FixedPanel = FixedPanel.Panel2 };
-        split.Panel1.Controls.Add(_grid); var form = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new(14), AutoScroll = true };
-        form.ColumnStyles.Add(new(SizeType.Percent, 42)); form.ColumnStyles.Add(new(SizeType.Percent, 58));
+        var split = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Horizontal, FixedPanel = FixedPanel.Panel2, Panel1MinSize = 220, Panel2MinSize = 285 };
+        split.Resize += (_, _) => { if (split.Height > split.Panel1MinSize + split.Panel2MinSize + split.SplitterWidth) split.SplitterDistance = split.Height - split.Panel2MinSize - split.SplitterWidth; };
+        split.Panel1.Controls.Add(_grid); var form = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 4, Padding = new(14), AutoScroll = true };
+        form.ColumnStyles.Add(new(SizeType.Absolute, 145)); form.ColumnStyles.Add(new(SizeType.Percent, 50)); form.ColumnStyles.Add(new(SizeType.Absolute, 145)); form.ColumnStyles.Add(new(SizeType.Percent, 50));
         Add(form, "Nombre", _name); Add(form, "Ráfaga CPU", _burst); Add(form, "Prioridad", _priority); Add(form, "Páginas", _pages); Add(form, "Referencias", _pattern); Add(form, "Bloquear tras CPU", _blockAfter); Add(form, "Duración E/S", _blockFor);
-        var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill }; foreach (var text in new[] { "Guardar", "Eliminar", "Limpiar", "Restaurar ejemplos" }) actions.Controls.Add(AppTheme.Button(text, text == "Eliminar" ? AppTheme.Error : null));
-        form.Controls.Add(actions, 0, form.RowCount); form.SetColumnSpan(actions, 2); split.Panel2.Controls.Add(form); Controls.Add(split);
+        var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true }; foreach (var text in new[] { "Crear / guardar", "Eliminar", "Limpiar", "Restaurar ejemplos" }) actions.Controls.Add(AppTheme.Button(text, text == "Eliminar" ? AppTheme.Error : null));
+        form.Controls.Add(actions, 0, form.RowCount); form.SetColumnSpan(actions, 4); split.Panel2.Controls.Add(form); Controls.Add(split);
     }
     private void WireEvents()
     {
         _grid.SelectionChanged += (_, _) => LoadSelected();
-        Find("Guardar").Click += (_, _) => Save(); Find("Eliminar").Click += (_, _) => Delete(); Find("Limpiar").Click += (_, _) => Clear();
+        Find("Crear / guardar").Click += (_, _) => Save(); Find("Eliminar").Click += (_, _) => Delete(); Find("Limpiar").Click += (_, _) => Clear();
         Find("Restaurar ejemplos").Click += (_, _) => { _state.RestoreDemo(); RefreshGrid(); Clear(); };
     }
     private void Save()
@@ -45,6 +46,6 @@ public sealed class ProgramsView : UserControl
     private Button Find(string text) => Descendants(this).OfType<Button>().First(b => b.Text == text);
     private static IEnumerable<Control> Descendants(Control root) => root.Controls.Cast<Control>().SelectMany(c => new[] { c }.Concat(Descendants(c)));
     private static NumericUpDown Num(int min, int max) => new() { Minimum = min, Maximum = max, Dock = DockStyle.Fill };
-    private static void Add(TableLayoutPanel p, string label, Control c) { var row = p.RowCount++; p.RowStyles.Add(new(SizeType.AutoSize)); p.Controls.Add(new Label { Text = label, AutoSize = true, ForeColor = AppTheme.Muted, Margin = new(3, 9, 3, 3) }, 0, row); c.Dock = DockStyle.Fill; c.Margin = new(3, 5, 3, 5); p.Controls.Add(c, 1, row); }
+    private static void Add(TableLayoutPanel p, string label, Control c) { var item = p.Controls.Count / 2; var row = item / 2; var column = (item % 2) * 2; if (column == 0) { p.RowCount++; p.RowStyles.Add(new(SizeType.Absolute, 42)); } p.Controls.Add(new Label { Text = label, AutoSize = true, ForeColor = AppTheme.Muted, Margin = new(3, 9, 3, 3) }, column, row); c.Dock = DockStyle.Fill; c.Margin = new(3, 5, 12, 5); p.Controls.Add(c, column + 1, row); }
     private void ApplyTheme() { BackColor = AppTheme.Background; _grid.Dock = DockStyle.Fill; AppTheme.Grid(_grid); }
 }

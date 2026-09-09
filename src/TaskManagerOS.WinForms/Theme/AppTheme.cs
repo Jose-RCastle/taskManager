@@ -16,7 +16,7 @@ public static class AppTheme
 
     public static Button Button(string text, Color? color = null) => new()
     {
-        Text = text, AutoSize = true, MinimumSize = new(110, 38), Padding = new(12, 5),
+        Text = text, AutoSize = true, MinimumSize = new(110, 38), Padding = new(12, 5, 12, 5),
         FlatStyle = FlatStyle.Flat, BackColor = color ?? Accent, ForeColor = Color.White,
         Font = new("Segoe UI Semibold", 9.5f), Margin = new(4)
     };

@@ -1,6 +1,7 @@
 using TaskManagerOS.Core.Memory;
 using TaskManagerOS.Core.Models;
 using TaskManagerOS.Core.Persistence;
+using TaskManagerOS.Core.Presentation;
 using TaskManagerOS.Core.Scheduling;
 using TaskManagerOS.Core.Simulation;
 using TaskManagerOS.Core.Validation;
@@ -18,7 +19,11 @@ var tests = new (string Name, Action Run)[]
     ("Bits R/M se actualizan", Bits),
     ("JSON conserva proyecto", Json),
     ("Referencia inválida se detecta", InvalidPage),
-    ("Simulación demo finaliza", FullSimulation)
+    ("Simulación demo finaliza", FullSimulation),
+    ("Simulación usa la entrada actual", CurrentInput),
+    ("Una entrada modificada produce otro resultado", ChangedInput),
+    ("Formatters producen nombres amigables", FriendlyNames),
+    ("Estado final no mantiene proceso activo", CleanFinalState)
 };
 var failed = 0;
 foreach (var test in tests)
@@ -91,4 +96,27 @@ static void FullSimulation()
 {
     var demo = DemoDataFactory.Create(); var result = new SimulationEngine().Run(demo.ExecutionList, demo.Configuration);
     True(result.Completed, "No finalizó"); Eq(10, result.Metrics.CompletedProcesses); True(result.Steps.Count > 0 && result.Metrics.TotalReferences > 0, "Sin pasos");
+}
+static void CurrentInput()
+{
+    var input = new[] { P("A", 1), P("B", 2), P("C", 1) };
+    var result = new SimulationEngine().Run(input, C());
+    Eq(input.Length, result.InputProcessCount); Eq(input.Length, result.Metrics.CompletedProcesses);
+}
+static void ChangedInput()
+{
+    var input = new List<ProcessInstance> { P("A", 1), P("B", 1) };
+    var engine = new SimulationEngine(); var previous = engine.Run(input, C()); input.RemoveAt(1); var current = engine.Run(input, C());
+    Eq(2, previous.InputProcessCount); Eq(1, current.InputProcessCount); Eq(1, current.Metrics.CompletedProcesses);
+}
+static void FriendlyNames()
+{
+    Eq("Round Robin", DisplayText.Scheduler(SchedulingAlgorithmType.RoundRobin)); Eq("Proceso más corto (SJF)", DisplayText.Scheduler(SchedulingAlgorithmType.ShortestJobFirst));
+    Eq("Prioridad", DisplayText.Scheduler(SchedulingAlgorithmType.Priority)); Eq("Óptimo", DisplayText.Replacement(PageReplacementAlgorithmType.Optimal)); Eq("NRU", DisplayText.Replacement(PageReplacementAlgorithmType.Nru));
+    Eq("Compilador #8 — Página 3", DisplayText.Page("Compilador #8", 3));
+}
+static void CleanFinalState()
+{
+    var result = new SimulationEngine().Run([P("A", 1), P("B", 2)], C()); var final = result.Steps.Last();
+    True(final.ProcessStates.Values.All(s => s == ProcessStatus.Finished), "Quedó un proceso activo en el estado final"); Eq(2, result.Metrics.CompletedProcesses);
 }
