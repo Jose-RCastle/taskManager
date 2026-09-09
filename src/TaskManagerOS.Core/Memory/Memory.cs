@@ -1,4 +1,5 @@
 using TaskManagerOS.Core.Models;
+using TaskManagerOS.Core.Presentation;
 
 namespace TaskManagerOS.Core.Memory;
 
@@ -68,8 +69,8 @@ public sealed class MemoryManager
             target = _frames[_algorithm.SelectVictim(new(_frames, all, index, tick))];
             evicted = target.Page;
             reason = _algorithm is OptimalPageReplacement
-                ? $"Óptimo retiró {evicted} por ser la referencia con uso futuro más lejano"
-                : $"NRU retiró {evicted} de la clase {NruPageReplacement.ClassOf(target)}";
+                ? $"Óptimo retiró {DisplayText.Page(target.ProcessName ?? "Proceso", evicted!.Value.PageNumber)} por ser la referencia con uso futuro más lejano"
+                : $"NRU retiró {DisplayText.Page(target.ProcessName ?? "Proceso", evicted!.Value.PageNumber)} de la clase {NruPageReplacement.ClassOf(target)}";
         }
         else reason = $"se asignó el marco libre {target.FrameNumber}";
         target.Page = reference.Page; target.ProcessName = reference.ProcessName; target.Referenced = true;

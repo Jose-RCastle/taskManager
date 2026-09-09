@@ -25,7 +25,7 @@ public sealed class SimulationEngine
         accessIndexes.Keys.ToList().ForEach(id => accessIndexes[id] = 0);
 
         var mmu = new MemoryManager(configuration);
-        var result = new SimulationResult();
+        var result = new SimulationResult { InputProcessCount = processes.Count };
         var referenceIndex = 0;
         var executed = processes.ToDictionary(p => p.Id, _ => 0);
         foreach (var cpu in ticks)

@@ -1,4 +1,4 @@
-# TaskManagerOS 0.1
+# TaskManagerOS 0.1.1
 
 TaskManagerOS es una aplicación académica de Sistemas Operativos que permite observar, tick a tick, cómo un planificador asigna CPU y cómo una MMU traduce referencias y reemplaza páginas. **No es el Administrador de tareas de Windows**: trabaja únicamente con modelos ficticios guardados por la propia aplicación; no enumera, modifica ni finaliza procesos reales.
 
@@ -41,12 +41,14 @@ Preparados como ampliación, pero deliberadamente no habilitados: multicolas, so
 
 ## Demostración breve para el profesor
 
-1. Abra **Inicio** y presente la separación entre cinco programas y diez instancias.
-2. En **Programas**, muestre el patrón de memoria y el bloqueo E/S del Navegador.
-3. En **Lista de ejecución**, repita una plantilla y cambie su llegada o prioridad.
-4. En **Configuración SO**, deje Round Robin, quantum 2, cuatro marcos y Óptimo.
-5. En **Emular MMU**, pulse **Paso siguiente** para explicar un fallo y un reemplazo; después pulse **Iniciar**.
-6. Al terminar, compare aciertos, fallos, rendimiento, esperas y retornos. Reinicie, seleccione NRU y observe R/M.
+1. Revise **Programas** y sus referencias/bloqueo E/S.
+2. Revise **Lista de ejecución** y sus instancias actuales.
+3. En **Configuración SO**, seleccione Round Robin, quantum 2, cuatro marcos y Óptimo.
+4. Abra **Emular MMU** e inicie la simulación.
+5. Avance algunos pasos.
+6. Señale los estados y los segmentos del Gantt.
+7. Muestre simultáneamente los marcos y la tabla de páginas.
+8. Finalice y explique las métricas; use **Reiniciar** para repetir exactamente el resultado actual.
 
 ## Persistencia y decisiones
 

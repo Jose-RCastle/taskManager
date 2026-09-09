@@ -10,6 +10,7 @@ public sealed class AppState
     public string FilePath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TaskManagerOS", "project.json");
     public ProjectData Project { get; private set; }
     public event EventHandler? Changed;
+    public long Revision { get; private set; }
 
     public AppState()
     {
@@ -17,6 +18,6 @@ public sealed class AppState
         catch { Project = DemoDataFactory.Create(); }
         Save();
     }
-    public void Save() { _store.Save(FilePath, Project); Changed?.Invoke(this, EventArgs.Empty); }
+    public void Save() { _store.Save(FilePath, Project); Revision++; Changed?.Invoke(this, EventArgs.Empty); }
     public void RestoreDemo() { Project = DemoDataFactory.Create(); Save(); }
 }

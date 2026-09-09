@@ -1,5 +1,6 @@
 using TaskManagerOS.Core.Models;
 using TaskManagerOS.Core.Validation;
+using TaskManagerOS.Core.Presentation;
 using TaskManagerOS.WinForms.Services;
 using TaskManagerOS.WinForms.Theme;
 
@@ -17,7 +18,7 @@ public sealed class ConfigurationView : UserControl
         var save = AppTheme.Button("Guardar configuración"); form.Controls.Add(save, 1, form.RowCount); Controls.Add(form);
     }
     private void WireEvents() => Desc(this).OfType<Button>().Single().Click += (_, _) => Save();
-    private void LoadValues() { _scheduler.DataSource = Enum.GetValues<SchedulingAlgorithmType>(); _replacement.DataSource = Enum.GetValues<PageReplacementAlgorithmType>(); var c = _state.Project.Configuration; _quantum.Value = c.Quantum; _frames.Value = c.PhysicalFrameCount; _pages.Value = c.VirtualPageCount; _size.Value = c.PageSizeKb; _reset.Value = c.NruReferenceResetInterval; _scheduler.SelectedItem = c.SchedulingAlgorithm; _replacement.SelectedItem = c.PageReplacementAlgorithm; }
+    private void LoadValues() { _scheduler.Format += (_, e) => e.Value = DisplayText.Scheduler((SchedulingAlgorithmType)e.ListItem!); _replacement.Format += (_, e) => e.Value = DisplayText.Replacement((PageReplacementAlgorithmType)e.ListItem!); _scheduler.DataSource = Enum.GetValues<SchedulingAlgorithmType>(); _replacement.DataSource = Enum.GetValues<PageReplacementAlgorithmType>(); var c = _state.Project.Configuration; _quantum.Value = c.Quantum; _frames.Value = c.PhysicalFrameCount; _pages.Value = c.VirtualPageCount; _size.Value = c.PageSizeKb; _reset.Value = c.NruReferenceResetInterval; _scheduler.SelectedItem = c.SchedulingAlgorithm; _replacement.SelectedItem = c.PageReplacementAlgorithm; }
     private void Save()
     {
         var c = new OperatingSystemConfiguration { Quantum = (int)_quantum.Value, PhysicalFrameCount = (int)_frames.Value, VirtualPageCount = (int)_pages.Value, PageSizeKb = (int)_size.Value, NruReferenceResetInterval = (int)_reset.Value, SchedulingAlgorithm = (SchedulingAlgorithmType)_scheduler.SelectedItem!, PageReplacementAlgorithm = (PageReplacementAlgorithmType)_replacement.SelectedItem! };
